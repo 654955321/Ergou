@@ -1,7 +1,0 @@
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\bin\Release\DevCommom.dll
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\bin\Release\DevCommom.pdb
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\bin\Release\SharpDX.Direct3D9.dll
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\bin\Release\LeagueSharp.xml
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\obj\Release\DevCommom.dll
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\obj\Release\DevCommom.pdb
-D:\我的文档\GitHub\Ergou\Dev 合集\DevCommom\obj\Release\DevCommom.csprojResolveAssemblyReference.cache
