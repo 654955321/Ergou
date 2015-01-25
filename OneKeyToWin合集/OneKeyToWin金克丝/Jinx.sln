@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jinx", "Jinx.csproj", "{1AA41CF9-0CBC-4A06-9A03-E688D76774EB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1AA41CF9-0CBC-4A06-9A03-E688D76774EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AA41CF9-0CBC-4A06-9A03-E688D76774EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AA41CF9-0CBC-4A06-9A03-E688D76774EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AA41CF9-0CBC-4A06-9A03-E688D76774EB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
