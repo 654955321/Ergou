@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using System;
 using System.Collections.Generic;
@@ -41,13 +41,14 @@ namespace LeeSin
         private static Vector3 firstpos;
         private static int canmove=1;
         private static int instypecheck;
-        private static int Passive;
         private static float wardtime;
         private static float inscount;
         private static float counttime;
         private static float qcasttime;
         private static float q2casttime;
-        private static float wdelay;
+        private static float wcasttime;
+        private static float ecasttime;
+        private static float casttime;
         private static bool walljump;
  
 
@@ -63,6 +64,8 @@ namespace LeeSin
             {
                 _player = ObjectManager.Player;
                 if (ObjectManager.Player.BaseSkinName != ChampionName) return;
+               
+                
                 _q = new Spell(SpellSlot.Q, 1100f);
                 _w = new Spell(SpellSlot.W, 700f);
                 _e = new Spell(SpellSlot.E, 330f);
@@ -77,13 +80,14 @@ namespace LeeSin
                 _rand = new Items.Item(3143, 490f);
                 _lotis = new Items.Item(3190, 590f);
                 _youmuu = new Items.Item(3142, 10);
+                
                 _igniteSlot = _player.GetSpellSlot("SummonerDot");
                 _flashSlot = _player.GetSpellSlot("SummonerFlash");
                 _smitedmgSlot = _player.GetSpellSlot(SmitetypeDmg());
+                _smitehpSlot = _player.GetSpellSlot(SmitetypeHp());
 
-                var enemy = from hero in ObjectManager.Get<Obj_AI_Hero>()
-                            where hero.IsEnemy == true
-                            select hero;
+
+
 
                 _config = new Menu("JackisSharp 盲僧", "Lee Is Back", true);
 
@@ -101,7 +105,7 @@ namespace LeeSin
                 _config.SubMenu("Combo").AddItem(new MenuItem("UseSmitecombo", "使用 惩戒(目标可击杀)")).SetValue(true);
                 _config.SubMenu("Combo").AddItem(new MenuItem("UseWcombo", "使用 W")).SetValue(false);
                 
-                _config.AddSubMenu(new Menu("R设置", "Insec"));
+                _config.AddSubMenu(new Menu("回旋踢", "Insec"));
                 _config.SubMenu("Insec").AddItem(new MenuItem("insc", "启用 回旋踢")).SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press));
                 _config.SubMenu("Insec").AddItem(new MenuItem("minins", "通过Q小兵接近目标回旋踢?")).SetValue(false);
                 _config.SubMenu("Insec").AddItem(new MenuItem("fins", "如果没有瞬眼使用闪现")).SetValue(true);
@@ -152,7 +156,7 @@ namespace LeeSin
                     .AddItem(new MenuItem("lotisminhp", "使用 钢铁烈阳之匣 队友血量<").SetValue(new Slider(35, 1, 100)));
 
                 //Farm
-                _config.AddSubMenu(new Menu("清线", "Farm"));
+                _config.AddSubMenu(new Menu("清线|清野", "Farm"));
                 _config.SubMenu("Farm").AddSubMenu(new Menu("清线", "LaneFarm"));
                 _config.SubMenu("Farm")
                     .SubMenu("LaneFarm")
@@ -167,11 +171,10 @@ namespace LeeSin
 
                 _config.SubMenu("Farm").AddSubMenu(new Menu("补刀", "LastHit"));
                 _config.SubMenu("Farm").SubMenu("LastHit").AddItem(new MenuItem("UseQLH", "Q 补刀")).SetValue(true);
-                _config.SubMenu("Farm").SubMenu("LastHit").AddItem(new MenuItem("UseELH", "E 补刀")).SetValue(true);
                 _config.SubMenu("Farm")
                     .SubMenu("LastHit")
                     .AddItem(
-                        new MenuItem("ActiveLast", "补刀!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
+                        new MenuItem("Activelast", "补刀!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
 
                 _config.SubMenu("Farm").AddSubMenu(new Menu("清野", "Jungle"));
                 _config.SubMenu("Farm")
@@ -181,6 +184,7 @@ namespace LeeSin
                 _config.SubMenu("Farm").SubMenu("Jungle").AddItem(new MenuItem("UseQJ", "Q 清野")).SetValue(true);
                 _config.SubMenu("Farm").SubMenu("Jungle").AddItem(new MenuItem("UseWJ", "W 清野")).SetValue(true);
                 _config.SubMenu("Farm").SubMenu("Jungle").AddItem(new MenuItem("UseEJ", "E 清野")).SetValue(true);
+                _config.SubMenu("Farm").SubMenu("Jungle").AddItem(new MenuItem("PriW", "先W后E? (关闭 先E后W)")).SetValue(true);
                 _config.SubMenu("Farm")
                     .SubMenu("Jungle")
                     .AddItem(
@@ -189,9 +193,7 @@ namespace LeeSin
                 //Misc
                 _config.AddSubMenu(new Menu("杂项", "Misc"));
                 _config.SubMenu("Misc").AddItem(new MenuItem("UseIgnitekill", "使用 点燃 抢人头")).SetValue(true);
-                _config.SubMenu("Misc").AddItem(new MenuItem("UseQM", "使用 Q 抢人头")).SetValue(true);
                 _config.SubMenu("Misc").AddItem(new MenuItem("UseEM", "使用 E 抢人头")).SetValue(true);
-                _config.SubMenu("Misc").AddItem(new MenuItem("AutoE", "自动 E")).SetValue(true);
                 _config.SubMenu("Misc").AddItem(new MenuItem("wjump", "一键瞬眼")).SetValue(new KeyBind("G".ToCharArray()[0], KeyBindType.Press));
                 _config.SubMenu("Misc").AddItem(new MenuItem("wjmax", "总是瞬眼极限范围?")).SetValue(false);
 
@@ -220,7 +222,6 @@ namespace LeeSin
                 Game.OnUpdate += Game_OnUpdate;
                 Obj_AI_Base.OnProcessSpellCast += OnProcessSpell;
                 Game.OnWndProc += OnWndProc;
-                Orbwalking.AfterAttack += AfterAttack;
 
             }
             catch (Exception e)
@@ -233,10 +234,6 @@ namespace LeeSin
                     
         private static void Game_OnUpdate(EventArgs args)
         {
-            if (inscount+1000< Environment.TickCount)
-            {
-                canmove = 1;
-            }
 
             if (_config.Item("ActiveCombo").GetValue<KeyBind>().Active)
             {          
@@ -257,50 +254,57 @@ namespace LeeSin
                 Insec(GetEnemy);
 
             }
+            if (_config.Item("Activejungle").GetValue<KeyBind>().Active)
+            {
+                JungleClear();
+            }
+            if (_config.Item("Activelane").GetValue<KeyBind>().Active)
+            {
+                LaneClear();
+            }
+            if (_config.Item("Activelast").GetValue<KeyBind>().Active)
+            {
+                LastHit();
+            }
+            
 
-
-
-            _player = ObjectManager.Player;
-
-
+            
  
 
         }
-         private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-            if (unit.IsMe)
-            {
-                if (Passive == 0)
-                {
-                    return;
-                }
-                Passive = Passive - 1;
-            }
-        }
+
         private static void OnWndProc(WndEventArgs args)
         {
-            if (args.Msg == 515)
+            if (args.Msg == 515 || args.Msg == 513)
             {
-                insdirec = Game.CursorPos;
-                instypecheck = 1;
-            }
-            var boohoo = ObjectManager.Get<Obj_AI_Base>()
-                     .OrderBy(obj => obj.Distance(_player.ServerPosition))
-                     .FirstOrDefault(
-                         obj =>
-                             obj.IsAlly && !obj.IsMe && !obj.IsMinion &&
-                              Game.CursorPos.Distance(obj.ServerPosition) <= 150);
+                if (args.Msg == 515)
+                {
+                    insdirec = Game.CursorPos;
+                    instypecheck = 1;
+                }
+                var boohoo = ObjectManager.Get<Obj_AI_Base>()
+                         .OrderBy(obj => obj.Distance(_player.ServerPosition))
+                         .FirstOrDefault(
+                             obj =>
+                                 obj.IsAlly && !obj.IsMe && !obj.IsMinion &&
+                                  Game.CursorPos.Distance(obj.ServerPosition) <= 150);
 
-            if (args.Msg == 513&& boohoo!=null  )
-            {
-                insobj = boohoo;
-                   instypecheck=2;
+                if (args.Msg == 513 && boohoo != null)
+                {
+                    insobj = boohoo;
+                    instypecheck = 2;
+                }
             }
 
         }
 
         private static void OnProcessSpell (Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
+            if (sender.IsMe)
+            {
+                casttime = Environment.TickCount;
+            }
+         
             if (sender.IsAlly || !sender.Type.Equals(GameObjectType.obj_AI_Hero) ||
                 (((Obj_AI_Hero)sender).ChampionName != "MonkeyKing" && ((Obj_AI_Hero)sender).ChampionName != "Akali") ||
                 sender.Position.Distance(_player.ServerPosition) >= 330  ||
@@ -337,18 +341,20 @@ namespace LeeSin
 
             return (float)damage;
         }
+        private static bool Passive()
+        {
+            if (_player.HasBuff("blindmonkpassive_cosmetic", true))
+            {
+                return true;
+            }
+            else
+                return false;
+        }
 
         private static void Combo(Obj_AI_Hero t)
         {
             if (t == null) return;
-            var jumpObject =
-                ObjectManager.Get<Obj_AI_Base>()
-                    .OrderBy(obj => obj.Distance(_player.ServerPosition))
-                    .FirstOrDefault(
-                        obj =>
-                            obj.IsAlly && !obj.IsMe &&
-                            !(obj.Name.IndexOf("turret", StringComparison.InvariantCultureIgnoreCase) >= 0)&&
-                            obj.Distance(t.Position)<_player.Distance(t.Position)-200 && obj.Distance(_player.Position)<700);
+
 
             if (_config.Item("UseIgnitecombo").GetValue<bool>() && _igniteSlot != SpellSlot.Unknown &&
                 _player.Spellbook.CanUseSpell(_igniteSlot) == SpellState.Ready)
@@ -360,9 +366,9 @@ namespace LeeSin
             }
             if (_config.Item("UseWcombo").GetValue<bool>() && t.Distance(_player.Position) <= Orbwalking.GetRealAutoAttackRange(_player))
             {
-                if (WStage == WCastStage.First || Passive == 0)
+                if (WStage == WCastStage.First || !Passive())
                     CastSelfW();
-                if (WStage == WCastStage.Second && (Passive == 0 ||  Environment.TickCount> wdelay + 2500))
+                if (WStage == WCastStage.Second && (!Passive() ||  Environment.TickCount> wcasttime + 2500))
                     _w.Cast();
             }
             if (_config.Item("UseSmitecombo").GetValue<bool>() &&_smitedmgSlot != SpellSlot.Unknown &&
@@ -388,7 +394,7 @@ namespace LeeSin
                     _q.Cast();
             }
 
-            CastE();
+            CastECombo();
             UseItemes(t);
             
         }
@@ -403,7 +409,7 @@ namespace LeeSin
                     obj.Distance(t.Position)< 550);
          
             if (_config.Item("UseEHar").GetValue<bool>())
-                CastE();
+                CastECombo();
             if (_config.Item("UseQ1Har").GetValue<bool>())
                 CastQ1(t);
             if (_config.Item("UseQ2Har").GetValue<bool>() && (t.HasBuff("BlindMonkQOne", true) || t.HasBuff("blindmonkqonechaos", true)) && jumpObject != null&& WStage==WCastStage.First)
@@ -487,22 +493,22 @@ namespace LeeSin
                 else if (_player.Distance(Game.CursorPos) >= 700 || walljump == true)
                 {
 
-                    if (Game.CursorPos.Distance(wallcheck) > 200)
+                    if (Game.CursorPos.Distance(wallcheck) > 150)
                         walljump = false;
                         for (var i = 0; i < 10; i++)
                         {
                             var p = Game.CursorPos.Extend(_player.Position, 40 * i);
                             if (NavMesh.GetCollisionFlags(p).HasFlag(CollisionFlags.Wall))
                             {
-
-                                walljump = true;
                                 jumppoint = p;
                                 wallcheck = Game.CursorPos;
+                                walljump = true;
                                 break;
 
 
                             }
                         }
+                 
                     if (walljump == true)
                     {
                         foreach (
@@ -588,11 +594,12 @@ namespace LeeSin
 
              if (!_r.IsReady() ||((Items.GetWardSlot() == null || Items.GetWardSlot().Stacks == 0 || WStage != WCastStage.First) && _player.Spellbook.CanUseSpell(_flashSlot) == SpellState.Cooldown))
              {
+                 canmove = 1;
                  return;
              }
 
 
-            insecpos = t.ServerPosition.Extend(insdirec, -250);
+            insecpos = t.ServerPosition.Extend(insdirec, -300);
             if ((_player.ServerPosition.Distance(insecpos) > 600 || inscount + 500 > Environment.TickCount) && t != null && t.IsValidTarget() && QStage == QCastStage.First)
             {
                 var qpred = _q.GetPrediction(t);
@@ -634,7 +641,7 @@ namespace LeeSin
                 counttime = Environment.TickCount;
                 canmove = 0;
             }
-            if (t.ServerPosition.Distance(insdirec) < _player.Position.Distance(insdirec) && WStage != WCastStage.First)
+            if (t.ServerPosition.Distance(insdirec)+100 < _player.Position.Distance(insdirec) && WStage != WCastStage.First)
             {
                 _r.CastOnUnit(t);
                 inscount = Environment.TickCount;
@@ -734,35 +741,42 @@ namespace LeeSin
         }
         private static void CastSelfW()
         {
-            if (500 >= Environment.TickCount - wdelay || WStage != WCastStage.First ) return;
+            if (500 >= Environment.TickCount - wcasttime || WStage != WCastStage.First ) return;
 
                 _w.Cast();
-                Passive = 2;
-            wdelay=Environment.TickCount;
+            wcasttime=Environment.TickCount;
             
         }
         private static void CastW(Obj_AI_Base obj)
         {
-            if (500 >= Environment.TickCount - wdelay || WStage != WCastStage.First) return;
+            if (500 >= Environment.TickCount - wcasttime || WStage != WCastStage.First) return;
 
             _w.CastOnUnit(obj);
-            wdelay = Environment.TickCount;
+            wcasttime = Environment.TickCount;
 
         }
 
-        private static void CastE()
+        private static void CastECombo()
         {
             if (!_e.IsReady()) return;
             if (ObjectManager.Get<Obj_AI_Hero>()
                 .Count(
                     hero =>
                         hero.IsValidTarget() &&
-                        (hero.Distance(ObjectManager.Player.ServerPosition) <= _e.Range || hero.HasBuff("BlindMonkEOne", true))) > 0)
+                        hero.Distance(ObjectManager.Player.ServerPosition) <= _e.Range)> 0)
             {
-                _e.Cast();
-                Passive = 2;
+                CastE1();
             }
+            if (EStage == ECastStage.Second && ((Environment.TickCount > casttime + 200 && !Passive()) || Environment.TickCount > ecasttime + 2700))
+                _e.Cast();
         }
+        private static void CastE1()
+        {
+            if (500 >= Environment.TickCount - ecasttime || EStage != ECastStage.First) return;
+            _e.Cast();
+            ecasttime = Environment.TickCount;
+        }
+
         private static void CastQ1(Obj_AI_Base target)
         {
             if (QStage != QCastStage.First) return;
@@ -771,7 +785,6 @@ namespace LeeSin
             {
                 _q.Cast(target);
                 firstpos = _player.Position;
-                Passive=2;
                 qcasttime = Environment.TickCount;
             }
         }
@@ -863,6 +876,105 @@ namespace LeeSin
 
             }
         }
+
+        private static void LaneClear()
+        {
+            var allMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, _q.Range);
+            var allMinionsE = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, _e.Range);
+            var useItemsl = _config.Item("UseItemslane").GetValue<bool>();
+            var useQl = _config.Item("UseQL").GetValue<bool>();
+            var useEl = _config.Item("UseEL").GetValue<bool>();
+            if (allMinionsQ.Count == 0)
+                return;
+            if (EStage == ECastStage.Second && ((Environment.TickCount > casttime + 200 && !Passive()) || Environment.TickCount > ecasttime + 2700))
+                _e.Cast();
+            if (QStage == QCastStage.Second && (Environment.TickCount > qcasttime + 2700 || Environment.TickCount > casttime + 200 && !Passive()))
+                _q.Cast();
+
+            foreach (var minion in allMinionsQ)
+            {
+                if (!Orbwalking.InAutoAttackRange(minion) &&useQl&&
+                    minion.Health < _player.GetSpellDamage(minion, SpellSlot.Q)*0.70)
+                    _q.Cast(minion);
+                else if (Orbwalking.InAutoAttackRange(minion) && useQl&&
+                    minion.Health > _player.GetSpellDamage(minion, SpellSlot.Q) * 2)
+                    CastQ1(minion);
+            }
+             
+            
+
+            if (_e.IsReady() && useEl)
+            {
+                if (allMinionsE.Count > 2)
+                {
+                    CastE1();
+                }
+                else
+                    foreach (var minion in allMinionsE)
+                        if (!Orbwalking.InAutoAttackRange(minion) &&
+                            minion.Health < 0.90 * _player.GetSpellDamage(minion, SpellSlot.E))
+                            CastE1();
+            }
+            if (useItemsl && _tiamat.IsReady() && allMinionsE.Count > 2)
+            {
+                _tiamat.Cast();
+            }
+            if (useItemsl && _hydra.IsReady() && allMinionsE.Count > 2)
+            {
+                _hydra.Cast();
+            }
+        }
+
+        private static void LastHit()
+        {
+            var allMinionsQ = MinionManager.GetMinions(_player.ServerPosition, _q.Range, MinionTypes.All);
+            var useQ = _config.Item("UseQLH").GetValue<bool>();
+            foreach (var minion in allMinionsQ)
+            {
+                if (QStage == QCastStage.First && useQ &&_player.Distance(minion.ServerPosition) < _q.Range &&
+                    minion.Health < 0.90 * _player.GetSpellDamage(minion, SpellSlot.Q))
+                {
+                    CastQ1(minion);
+                }
+            }
+        }
+        private static void JungleClear()
+        {
+            var mobs = MinionManager.GetMinions(_player.ServerPosition, _q.Range,
+                MinionTypes.All,
+                MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+            var useItemsJ = _config.Item("UseItemsjungle").GetValue<bool>();
+            var useQ = _config.Item("UseQJ").GetValue<bool>();
+            var useW = _config.Item("UseWJ").GetValue<bool>();
+            var useE = _config.Item("UseEJ").GetValue<bool>();
+            
+
+            if (mobs.Count > 0)
+            {
+                var mob = mobs[0];
+                if (useItemsJ && _tiamat.IsReady() && _player.Distance(mob.ServerPosition) < _tiamat.Range)
+                {
+                    _tiamat.Cast();
+                }
+                if (useItemsJ && _hydra.IsReady() && _player.Distance(mob.ServerPosition) < _hydra.Range)
+                {
+                    _hydra.Cast();
+                }
+                if (QStage == QCastStage.Second && (mob.Health < _q.GetDamage(mob) && ((mob.HasBuff("BlindMonkQOne", true) || mob.HasBuff("blindmonkqonechaos", true))) || Environment.TickCount > qcasttime + 2700 || ((Environment.TickCount > casttime + 200 && !Passive()))))
+                    _q.Cast();
+                if (WStage == WCastStage.Second && ((Environment.TickCount > casttime + 200 && !Passive()) || Environment.TickCount > wcasttime + 2700))
+                    _w.Cast();
+                if (EStage == ECastStage.Second && ((Environment.TickCount > casttime + 200 && !Passive()) || Environment.TickCount > ecasttime + 2700))
+                    _e.Cast();
+                if (!Passive() && useQ && _q.IsReady() && Environment.TickCount > casttime + 200 || mob.Health < _q.GetDamage(mob)*2)
+                    CastQ1(mob);
+                else if (!Passive() && _config.Item("PriW").GetValue<bool>() && useW && _w.IsReady()&& Environment.TickCount>casttime+200)
+                    CastSelfW();
+                else if (!Passive() && useE && _e.IsReady() && mob.Distance(_player.Position) < _e.Range && Environment.TickCount > casttime + 200 || mob.Health < _e.GetDamage(mob))
+                    CastE1();
+
+            }
+        }
         private static void KillSteal()
         {
             var enemyVisible =
@@ -889,6 +1001,7 @@ namespace LeeSin
 
 
 
+
         private static void Drawing_OnDraw(EventArgs args)
         
         {
@@ -911,7 +1024,6 @@ namespace LeeSin
                 foreach (
                     var enemyVisible in
                         ObjectManager.Get<Obj_AI_Hero>().Where(enemyVisible => enemyVisible.IsValidTarget()))
-                {
 
                     if (ComboDamage(enemyVisible) > enemyVisible.Health)
                     {
@@ -919,18 +1031,7 @@ namespace LeeSin
                             Drawing.WorldToScreen(enemyVisible.Position)[1] - 40, Color.Red,
                             "Combo=Rekt");
                     }
-                    else if (ComboDamage(enemyVisible) + _player.GetAutoAttackDamage(enemyVisible, true) * 2 >
-                             enemyVisible.Health)
-                    {
-                        Drawing.DrawText(Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                            Drawing.WorldToScreen(enemyVisible.Position)[1] - 40, Color.Orange,
-                            "Combo + 2 AA = Rekt");
-                    }
-                    else
-                        Drawing.DrawText(Drawing.WorldToScreen(enemyVisible.Position)[0] + 50,
-                            Drawing.WorldToScreen(enemyVisible.Position)[1] - 40, Color.Green,
-                            "Unkillable with combo + 2AA");
-                }
+
             }
 
 
