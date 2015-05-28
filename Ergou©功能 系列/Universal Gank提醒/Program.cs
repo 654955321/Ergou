@@ -21,6 +21,8 @@ namespace UniversalGankAlerter
         private MenuItem _enemyJunglerOnly;
         private MenuItem _allyJunglerOnly;
         private MenuItem _showChampionNames;
+        private MenuItem _drawMinimapLines;
+        private MenuItem _dangerPing;
         private Menu _enemies;
         private Menu _allies;
 
@@ -32,6 +34,11 @@ namespace UniversalGankAlerter
         public int Cooldown
         {
             get { return _sliderCooldown.GetValue<Slider>().Value; }
+        }
+
+        public bool DangerPing
+        {
+            get { return _dangerPing.GetValue<bool>(); }
         }
 
         public int LineDuration
@@ -52,6 +59,11 @@ namespace UniversalGankAlerter
         public bool ShowChampionNames
         {
             get { return _showChampionNames.GetValue<bool>(); }
+        }
+
+        public bool DrawMinimapLines
+        {
+            get { return _drawMinimapLines.GetValue<bool>(); }
         }
 
         private static void Main(string[] args)
@@ -78,19 +90,23 @@ namespace UniversalGankAlerter
             _sliderRadius.ValueChanged += SliderRadiusValueChanged;
             _sliderCooldown = new MenuItem("cooldown", "触发 冷却 (秒)").SetValue(new Slider(10, 0, 60));
             _sliderLineDuration = new MenuItem("lineduration", "路径 持续时间 (秒)").SetValue(new Slider(10, 0, 20));
-            _enemyJunglerOnly = new MenuItem("jungleronly", "提醒草丛打野(敌方)").SetValue(false);
-            _allyJunglerOnly = new MenuItem("allyjungleronly", "提醒草丛打野(盟友)").SetValue(true);
+            _enemyJunglerOnly = new MenuItem("jungleronly", "提醒打野(敌方)").SetValue(false);
+            _allyJunglerOnly = new MenuItem("allyjungleronly", "提醒打野(盟友)").SetValue(true);
             _showChampionNames = new MenuItem("shownames", "显示英雄名字").SetValue(true);
-            _enemies = new Menu("敌人", "enemies");
+            _drawMinimapLines = new MenuItem("drawminimaplines", "小地图显示路径").SetValue(false);
+            _dangerPing = new MenuItem("dangerping", "危险 Ping (本地)").SetValue(false);
+            _enemies = new Menu("敌人提醒开关", "enemies");
             _enemies.AddItem(_enemyJunglerOnly);
 
-            _allies = new Menu("盟友", "allies");
+            _allies = new Menu("盟友提醒开关", "allies");
             _allies.AddItem(_allyJunglerOnly);
 
             _menu.AddItem(_sliderRadius);
             _menu.AddItem(_sliderCooldown);
             _menu.AddItem(_sliderLineDuration);
             _menu.AddItem(_showChampionNames);
+            _menu.AddItem(_drawMinimapLines);
+            _menu.AddItem(_dangerPing);
             _menu.AddSubMenu(_enemies);
             _menu.AddSubMenu(_allies);
             foreach (Obj_AI_Hero hero in ObjectManager.Get<Obj_AI_Hero>())
@@ -199,7 +215,7 @@ namespace UniversalGankAlerter
                     float dist = _hero.Distance(ObjectManager.Player.Position);
                     return Program.Instance().ShowChampionNames && !_hero.IsDead &&
                            Game.ClockTime - _lineStart < Program.Instance().LineDuration &&
-                           !Render.OnScreen(Drawing.WorldToScreen(_hero.Position)) &&
+                           (!_hero.IsVisible || !Render.OnScreen(Drawing.WorldToScreen(_hero.Position))) &&
                            dist < Program.Instance().Radius && dist > 300 + textoffset;
                 },
                 Centered = true,
@@ -229,7 +245,7 @@ namespace UniversalGankAlerter
                 VisibleCondition =
                     delegate
                     {
-                        return !_hero.IsDead && Game.ClockTime - _lineStart < Program.Instance().LineDuration;
+                        return Program.Instance().DrawMinimapLines && !_hero.IsDead && Game.ClockTime - _lineStart < Program.Instance().LineDuration;
                     }
             };
             minimapLine.Add(0);
@@ -256,6 +272,10 @@ namespace UniversalGankAlerter
             if (Game.ClockTime - _lastEnter > Program.Instance().Cooldown && enabled)
             {
                 _lineStart = Game.ClockTime;
+                if (Program.Instance().DangerPing && _hero.IsEnemy && !_hero.IsDead)
+                {
+                    Game.ShowPing(PingCategory.Danger,_hero, true);
+                }
             }
             _lastEnter = Game.ClockTime;
         }
