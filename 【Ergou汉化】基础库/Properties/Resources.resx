@@ -13557,7 +13557,7 @@
 	"check delay": "\u68C0\u67E5\u5EF6\u8FDF",
 	"use sentinal": "\u4F7F\u7528\u54E8\u5175",
 	"swap between locations": "\u4EA4\u6362\u54E8\u5175\u4F4D\u7F6E",
-	"swap sentinel to location": "\u4F4D\u7F6E\u4E4B\u95F4\u7684\u4EA4\u6362",
+	"send sentinel to location": "\u6D3E\u54E8\u5175\u5230\u9F20\u6807\u4F4D\u7F6E",
 	"Dashing": "\u534E\u4E3D"
 
 	
