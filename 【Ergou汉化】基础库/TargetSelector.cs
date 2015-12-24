@@ -278,9 +278,12 @@ namespace LeagueSharp.Common
 
 
                 CommonMenu.Instance.AddSubMenu(config);
-
                 Game.OnWndProc += GameOnOnWndProc;
-                Drawing.OnDraw += DrawingOnOnDraw;
+
+                if (!CustomTS)
+                {
+                    Drawing.OnDraw += DrawingOnOnDraw;
+                }
             };
         }
 
