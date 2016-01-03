@@ -5564,7 +5564,7 @@
     "fast crossing": "\u5feb\u901f\u7a7f\u8d8a",
     "load ping tester": "\u8f7d\u5165Ping\u6d4b\u8bd5",
     "calculate hero position": "\u8ba1\u7b97\u82f1\u96c4\u4f4d\u7f6e",
-    "reaction time": "\u53cd\u5e94\u65f6\u95f4 ",
+    "reaction time": "\u5236\u52A8\u53cd\u5e94\u65f6\u95f4",
     "dodge interval": "\u95ea\u8eb2\u95f4\u9694",
     "fastevade activation time": "\u5feb\u901f\u95ea\u8eb2\u53cd\u5e94\u65f6\u95f4",
     "spell activation time": "\u6280\u80fd\u53cd\u5e94\u65f6\u95f4",
@@ -13559,6 +13559,14 @@
 	"use sentinal": "\u4F7F\u7528\u54E8\u5175",
 	"swap between locations": "\u4EA4\u6362\u54E8\u5175\u4F4D\u7F6E",
 	"send sentinel to location": "\u6D3E\u54E8\u5175\u5230\u9F20\u6807\u4F4D\u7F6E",
+	"aiezevade": "AI Ez\u8EB2\u907F\u63D2\u4EF6",
+	"activation above % hp": "\u9AD8\u4E8E\u0048\u0050\u0025\u65F6\u751F\u6548",
+	"dodge circular spells": "\u8EB2\u907F\u5706\u5F62\u6280\u80FD",
+	"dodge fow spells": "\u8EB2\u907F\u76F4\u7EBF\u6280\u80FD",
+	"click only once": "\u53EA\u70B9\u51FB\u4E00\u6B21\uFF08\u68C0\u6D4B\u6700\u4F73\u4F4D\u7F6E\uFF09",
+	"fast movement block": "\u9650\u5236\u5FEB\u901F\u79FB\u52A8",
+	"activation between low and high": "\u4F24\u5BB3\u5728\u9AD8\u548C\u4F4E\u4E4B\u95F4\u65F6\u751F\u6548",
+	"activation under % hp": "\u4F4E\u4E8E\u0048\u0050\u0025\u65F6\u751F\u6548",
 	"Dashing": "\u534E\u4E3D"
 
 	
