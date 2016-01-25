@@ -1220,7 +1220,7 @@ namespace LeagueSharp.Common
                             .Where(
                                 mob =>
                                     mob.IsValidTarget() && mob.Team == GameObjectTeam.Neutral && InAutoAttackRange(mob) &&
-                                    mob.CharData.BaseSkinName != "gangplankbarrel");
+                                    mob.CharData.BaseSkinName != "gangplankbarrel" && mob.Name != "WardCorpse");
 
                     result = _config.Item("Smallminionsprio").GetValue<bool>()
                         ? jminions.MinOrDefault(mob => mob.MaxHealth)
@@ -1441,12 +1441,12 @@ namespace LeagueSharp.Common
                                 .Where(
                                     minion =>
                                         minion.IsValidTarget() && InAutoAttackRange(minion) &&
-                                        (_config.Item("AttackWards").GetValue<bool>() ||
-                                         !MinionManager.IsWard(minion.CharData.BaseSkinName.ToLower())) &&
+                                        (_config.Item("AttackWards").GetValue<bool>() || 
+                                        !MinionManager.IsWard(minion)) &&
                                         (_config.Item("AttackPetsnTraps").GetValue<bool>() &&
                                          minion.CharData.BaseSkinName != "jarvanivstandard" ||
                                          MinionManager.IsMinion(minion, _config.Item("AttackWards").GetValue<bool>())) &&
-                                        minion.CharData.BaseSkinName != "gangplankbarrel")
+                                        minion.CharData.BaseSkinName != "gangplankbarrel" && minion.Name != "WardCorpse")
                             let predHealth =
                                 HealthPrediction.LaneClearHealthPrediction(
                                     minion, (int) (Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay)
