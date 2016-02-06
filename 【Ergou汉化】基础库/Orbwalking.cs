@@ -445,6 +445,14 @@ namespace LeagueSharp.Common
                 return false;
             }
 
+            if (Player.ChampionName == "Jhin")
+            {
+                if(Player.HasBuff("JhinPassiveReload"))
+                {
+                    return false;
+                }
+            }
+
             return Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + Player.AttackDelay * 1000;
         }
 
@@ -886,7 +894,7 @@ namespace LeagueSharp.Common
                 _config.AddItem(new MenuItem("Farm", "Mixed").SetShared().SetValue(new KeyBind('C', KeyBindType.Press)));
 
                 _config.AddItem(
-                    new MenuItem("Freeze", "Freeze").SetShared().SetValue(new KeyBind('A', KeyBindType.Press)));
+                    new MenuItem("Freeze", "Freeze").SetShared().SetValue(new KeyBind('N', KeyBindType.Press)));
 
                 _config.AddItem(
                     new MenuItem("LaneClear", "LaneClear").SetShared().SetValue(new KeyBind('V', KeyBindType.Press)));
